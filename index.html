@@ -1,0 +1,2017 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Memori Satwa</title>
+    <!-- Google Fonts: Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        bubblegum: '#F478B0',
+                        tangerine: '#FFA934',
+                        ocean: '#00A0B5',
+                        banana: '#FFEF5A',
+                        avocado: '#98C54E',
+                        bellpepper: '#14704F',
+                        cream: '#FFFDF7',
+                        creamdark: '#F7F3E6'
+                    },
+                    boxShadow: {
+                        'playful': '0 6px 0 #14704F',
+                        'playful-sm': '0 4px 0 #14704F',
+                        'playful-lg': '0 8px 0 #14704F',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #FFFDF7;
+            color: #14704F;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+        }
+
+        /* Custom playful button interactions */
+        .btn-playful {
+            border: 3px solid #14704F;
+            box-shadow: 0 6px 0 #14704F;
+            transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease;
+        }
+        .btn-playful:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #14704F;
+        }
+        .btn-playful:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #14704F;
+        }
+        .btn-playful:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        /* Animations */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float {
+            animation: floatSlow 3s ease-in-out infinite;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.88); opacity: 0; }
+            70% { transform: scale(1.02); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: popIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @keyframes pulseGentle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+        .animate-pulse-gentle {
+            animation: pulseGentle 2s infinite ease-in-out;
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-4deg); }
+            75% { transform: rotate(4deg); }
+        }
+        .animate-wiggle {
+            animation: wiggle 0.4s ease-in-out;
+        }
+
+        /* Progress Bar Smooth Transition */
+        #stimulus-timer-bar {
+            transition: width 0.1s linear;
+        }
+
+        /* Drag and Drop Dropzone Highlights */
+        .dropzone-active {
+            transform: scale(1.03);
+            border-style: dashed !important;
+            background-color: #FFEF5A !important;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F7F3E6;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #98C54E;
+            border-radius: 99px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- TOP NAVIGATION & STATUS BAR -->
+    <header class="w-full bg-white border-b-4 border-bellpepper px-4 py-3 sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <!-- Brand / Home Button -->
+            <button onclick="confirmGoHome()" class="flex items-center gap-2 text-left group focus:outline-none" aria-label="Kembali ke Beranda">
+                <div class="w-11 h-11 rounded-2xl bg-banana border-3 border-bellpepper flex items-center justify-center text-2xl shadow-playful-sm group-hover:scale-105 transition-transform">
+                    🦁
+                </div>
+                <div>
+                    <span class="font-extrabold text-lg sm:text-xl text-bellpepper leading-tight block">Petualangan Memori</span>
+                    <span class="text-xs font-bold text-ocean uppercase tracking-wider block">Dunia Satwa</span>
+                </div>
+            </button>
+
+            <!-- Paw Print / Progress Indicator (Hidden on Welcome) -->
+            <div id="top-progress-container" class="hidden md:flex items-center gap-2 bg-creamdark px-4 py-1.5 rounded-full border-2 border-bellpepper">
+                <span class="text-xs font-extrabold uppercase tracking-wide text-bellpepper mr-1">Jejak:</span>
+                <div id="paw-steps" class="flex items-center gap-1.5 text-lg">
+                    <span data-step="1" title="Latihan" class="opacity-30 transition-opacity">🐾</span>
+                    <span data-step="2" title="Tantangan Memori" class="opacity-30 transition-opacity">🐾</span>
+                    <span data-step="3" title="Rumah Hewan" class="opacity-30 transition-opacity">🐾</span>
+                    <span data-step="4" title="Makanan Hewan" class="opacity-30 transition-opacity">🐾</span>
+                    <span data-step="5" title="Selesai" class="opacity-30 transition-opacity">🏆</span>
+                </div>
+            </div>
+
+            <!-- Audio & Companion Controls -->
+            <div class="flex items-center gap-2">
+                <button id="btn-repeat-audio" onclick="repeatCurrentInstruction()" class="hidden btn-playful bg-banana text-bellpepper px-3 py-2 rounded-2xl font-bold text-sm sm:text-base flex items-center gap-1.5" title="Ulangi Suara Instruksi">
+                    <span>🔊</span>
+                    <span class="hidden sm:inline">Ulangi Suara</span>
+                </button>
+
+                <button id="btn-toggle-mute" onclick="toggleMute()" class="btn-playful bg-ocean text-white px-3 py-2 rounded-2xl font-bold text-sm sm:text-base flex items-center gap-1" title="Suara Aktif/Mati">
+                    <span id="icon-mute">🔊</span>
+                </button>
+
+                <button onclick="openDashboardModal()" class="btn-playful bg-bubblegum text-bellpepper px-3 py-2 rounded-2xl font-bold text-sm sm:text-base flex items-center gap-1" title="Catatan Pendamping">
+                    <span>📊</span>
+                    <span class="hidden sm:inline text-xs font-extrabold">Pendamping</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-6">
+        <div class="w-full max-w-4xl">
+
+            <!-- ========================================================= -->
+            <!-- SCREEN 1: WELCOME                                         -->
+            <!-- ========================================================= -->
+            <section id="screen-welcome" class="screen-section animate-pop bg-white rounded-3xl border-4 border-bellpepper p-6 sm:p-10 shadow-playful-lg text-center">
+                <!-- Decorative Animal Banner -->
+                <div class="flex justify-center items-center gap-3 sm:gap-5 mb-6">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-tangerine/30 border-3 border-bellpepper flex items-center justify-center text-4xl sm:text-5xl animate-float" style="animation-delay: 0s;">🐘</div>
+                    <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-banana border-3 border-bellpepper flex items-center justify-center text-5xl sm:text-6xl animate-float" style="animation-delay: 0.4s;">🦁</div>
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-ocean/30 border-3 border-bellpepper flex items-center justify-center text-4xl sm:text-5xl animate-float" style="animation-delay: 0.8s;">🐬</div>
+                    <div class="hidden sm:flex w-20 h-20 rounded-3xl bg-avocado/30 border-3 border-bellpepper items-center justify-center text-5xl animate-float" style="animation-delay: 1.2s;">🦅</div>
+                </div>
+
+                <h1 class="text-3xl sm:text-5xl font-black text-bellpepper tracking-tight mb-2">
+                    Petualangan Memori Satwa
+                </h1>
+                <p class="text-xl sm:text-2xl font-bold text-ocean mb-6">
+                    Kenali, Ingat, dan Kelompokkan!
+                </p>
+
+                <!-- Optional Explorer Code & Class Setup (Kid-Friendly & Non-Intrusive) -->
+                <div class="max-w-lg mx-auto bg-creamdark rounded-2xl border-3 border-bellpepper p-4 mb-8 text-left">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-extrabold text-base text-bellpepper flex items-center gap-1.5">
+                            <span>🎒</span> Kartu Penjelajah
+                        </span>
+                        <span class="text-xs font-bold bg-banana px-2.5 py-0.5 rounded-full border-2 border-bellpepper">Opsional</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label for="input-participant-id" class="block text-xs font-extrabold uppercase text-bellpepper mb-1">Nama Penjelajah</label>
+                            <input id="input-participant-id" type="text" maxlength="25" placeholder="Contoh: Budi" class="w-full px-3 py-2 rounded-xl border-2 border-bellpepper bg-white font-bold text-bellpepper focus:outline-none focus:ring-2 focus:ring-ocean">
+                        </div>
+                        <div>
+                            <label for="select-grade" class="block text-xs font-extrabold uppercase text-bellpepper mb-1">Kelas</label>
+                            <select id="select-grade" class="w-full px-3 py-2 rounded-xl border-2 border-bellpepper bg-white font-bold text-bellpepper focus:outline-none focus:ring-2 focus:ring-ocean">
+                                <option value="Kelas 1">Kelas 1 SD</option>
+                                <option value="Kelas 2" selected>Kelas 2 SD</option>
+                                <option value="Kelas 3">Kelas 3 SD</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Action Buttons -->
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button onclick="startAdventureFromWelcome()" class="w-full sm:w-auto btn-playful bg-avocado text-bellpepper px-8 py-4 rounded-2xl font-black text-xl sm:text-2xl flex items-center justify-center gap-2">
+                        <span>🚀</span>
+                        <span>Mulai Petualangan</span>
+                    </button>
+                    <button onclick="goToTutorial()" class="w-full sm:w-auto btn-playful bg-bubblegum text-bellpepper px-6 py-4 rounded-2xl font-extrabold text-xl flex items-center justify-center gap-2">
+                        <span>📖</span>
+                        <span>Cara Bermain</span>
+                    </button>
+                    <button onclick="openAudioSettingsModal()" class="w-full sm:w-auto btn-playful bg-banana text-bellpepper px-6 py-4 rounded-2xl font-extrabold text-xl flex items-center justify-center gap-2">
+                        <span>🔊</span>
+                        <span>Pengaturan Suara</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- SCREEN 2: TUTORIAL                                        -->
+            <!-- ========================================================= -->
+            <section id="screen-tutorial" class="screen-section hidden animate-pop bg-white rounded-3xl border-4 border-bellpepper p-6 sm:p-8 shadow-playful-lg">
+                <div class="text-center mb-6">
+                    <span class="inline-block bg-banana border-2 border-bellpepper px-4 py-1 rounded-full font-extrabold text-sm uppercase tracking-wider mb-2">
+                        Panduan Penjelajah
+                    </span>
+                    <h2 class="text-2xl sm:text-4xl font-black text-bellpepper">Cara Bermain</h2>
+                </div>
+
+                <!-- 4 Step Illustrated Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-8">
+                    <!-- Step 1 -->
+                    <div class="bg-creamdark rounded-2xl border-3 border-bellpepper p-4 flex items-center gap-4">
+                        <div class="w-16 h-16 shrink-0 rounded-2xl bg-tangerine border-3 border-bellpepper flex items-center justify-center text-3xl font-black text-bellpepper relative">
+                            👀
+                            <span class="absolute -top-2 -left-2 w-7 h-7 rounded-full bg-white border-2 border-bellpepper text-sm flex items-center justify-center">1</span>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-xl text-bellpepper">1. Lihat gambar hewan.</h3>
+                            <p class="text-base font-semibold text-bellpepper/80">Perhatikan bentuk dan warna hewannya.</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="bg-creamdark rounded-2xl border-3 border-bellpepper p-4 flex items-center gap-4">
+                        <div class="w-16 h-16 shrink-0 rounded-2xl bg-ocean text-white border-3 border-bellpepper flex items-center justify-center text-3xl font-black relative">
+                            👂
+                            <span class="absolute -top-2 -left-2 w-7 h-7 rounded-full bg-white text-bellpepper border-2 border-bellpepper text-sm flex items-center justify-center">2</span>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-xl text-bellpepper">2. Dengarkan nama hewan.</h3>
+                            <p class="text-base font-semibold text-bellpepper/80">Suara akan menyebutkan nama setiap hewan.</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="bg-creamdark rounded-2xl border-3 border-bellpepper p-4 flex items-center gap-4">
+                        <div class="w-16 h-16 shrink-0 rounded-2xl bg-banana border-3 border-bellpepper flex items-center justify-center text-3xl font-black text-bellpepper relative">
+                            🧠
+                            <span class="absolute -top-2 -left-2 w-7 h-7 rounded-full bg-white border-2 border-bellpepper text-sm flex items-center justify-center">3</span>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-xl text-bellpepper">3. Ingat hewan yang muncul.</h3>
+                            <p class="text-base font-semibold text-bellpepper/80">Simpan di ingatanmu selama 5 detik.</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="bg-creamdark rounded-2xl border-3 border-bellpepper p-4 flex items-center gap-4">
+                        <div class="w-16 h-16 shrink-0 rounded-2xl bg-avocado border-3 border-bellpepper flex items-center justify-center text-3xl font-black text-bellpepper relative">
+                            👆
+                            <span class="absolute -top-2 -left-2 w-7 h-7 rounded-full bg-white border-2 border-bellpepper text-sm flex items-center justify-center">4</span>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-xl text-bellpepper">4. Pilih hewan yang tadi kamu lihat.</h3>
+                            <p class="text-base font-semibold text-bellpepper/80">Sentuh atau klik gambar hewan yang benar.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mini Interactive Demo Preview -->
+                <div class="bg-banana/40 border-3 border-bellpepper rounded-2xl p-4 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <span class="text-4xl animate-pulse-gentle">🐼</span>
+                        <div>
+                            <p class="font-extrabold text-lg text-bellpepper">Coba dengar contoh suara hewan:</p>
+                            <p class="text-sm font-bold text-bellpepper/80">Klik tombol di samping untuk mendengarkan.</p>
+                        </div>
+                    </div>
+                    <button onclick="playDubbedAudio('contoh_panda', 'Panda! Ini adalah Panda.', false)" class="btn-playful bg-white text-bellpepper px-4 py-2 rounded-xl font-extrabold text-base flex items-center gap-2 shrink-0">
+                        <span>🔊</span> Dengarkan "Panda"
+                    </button>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-center gap-4">
+                    <button onclick="showScreen('welcome')" class="btn-playful bg-creamdark text-bellpepper px-6 py-3.5 rounded-2xl font-extrabold text-xl">
+                        ⬅️ Kembali
+                    </button>
+                    <button onclick="startPractice()" class="btn-playful bg-avocado text-bellpepper px-8 py-4 rounded-2xl font-black text-xl sm:text-2xl flex items-center gap-2">
+                        <span>🎯</span>
+                        <span>Ayo Berlatih</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- SCREEN 3 & 4: STIMULUS PRESENTATION (PRACTICE & MEMORY)   -->
+            <!-- ========================================================= -->
+            <section id="screen-stimulus" class="screen-section hidden animate-pop bg-white rounded-3xl border-4 border-bellpepper p-6 sm:p-8 shadow-playful-lg text-center">
+                <!-- Top Header Badge -->
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <span id="stimulus-mode-badge" class="bg-bubblegum text-bellpepper border-2 border-bellpepper px-4 py-1 rounded-full font-extrabold text-base">
+                        Sesi Latihan
+                    </span>
+                    <span id="stimulus-counter-badge" class="bg-creamdark text-bellpepper border-2 border-bellpepper px-4 py-1 rounded-full font-extrabold text-base">
+                        Hewan 1 dari 2
+                    </span>
+                </div>
+
+                <!-- Level Selector Bar (Shown before starting Memory Challenge or between trials) -->
+                <div id="level-selector-panel" class="hidden mb-6 bg-creamdark p-4 rounded-2xl border-3 border-bellpepper">
+                    <p class="font-extrabold text-xl text-bellpepper mb-3">Pilih Level Petualangan Memori:</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                        <button onclick="selectMemoryLevel(1)" id="lvl-btn-1" class="lvl-btn btn-playful bg-avocado text-bellpepper p-3 rounded-2xl font-extrabold text-lg flex flex-col items-center">
+                            <span>Level 1</span>
+                            <span class="text-xs font-bold bg-white/80 px-2 py-0.5 rounded-full mt-1">2 Hewan • Pemula</span>
+                        </button>
+                        <button onclick="selectMemoryLevel(2)" id="lvl-btn-2" class="lvl-btn btn-playful bg-white text-bellpepper p-3 rounded-2xl font-extrabold text-lg flex flex-col items-center">
+                            <span>Level 2</span>
+                            <span class="text-xs font-bold bg-creamdark px-2 py-0.5 rounded-full mt-1">3 Hewan</span>
+                        </button>
+                        <button onclick="selectMemoryLevel(3)" id="lvl-btn-3" class="lvl-btn btn-playful bg-white text-bellpepper p-3 rounded-2xl font-extrabold text-lg flex flex-col items-center">
+                            <span>Level 3</span>
+                            <span class="text-xs font-bold bg-creamdark px-2 py-0.5 rounded-full mt-1">4 Hewan</span>
+                        </button>
+                        <button onclick="selectMemoryLevel(4)" id="lvl-btn-4" class="lvl-btn btn-playful bg-white text-bellpepper p-3 rounded-2xl font-extrabold text-lg flex flex-col items-center">
+                            <span>Level 4</span>
+                            <span class="text-xs font-bold bg-banana px-2 py-0.5 rounded-full mt-1">5 Hewan • Tantangan</span>
+                        </button>
+                    </div>
+                    <button onclick="beginMemoryTrial()" class="btn-playful bg-tangerine text-bellpepper px-8 py-3.5 rounded-2xl font-black text-xl sm:text-2xl inline-flex items-center gap-2">
+                        <span>▶️</span>
+                        <span>Mulai Mengingat</span>
+                    </button>
+                </div>
+
+                <!-- Consistent Stimulus Display Box -->
+                <div id="stimulus-stage" class="w-full max-w-md mx-auto h-72 sm:h-80 bg-cream rounded-3xl border-4 border-bellpepper flex flex-col items-center justify-center relative overflow-hidden mb-5">
+                    
+                    <!-- Fixation Cross (+) -->
+                    <div id="stage-fixation" class="hidden text-7xl font-black text-bellpepper select-none">
+                        +
+                    </div>
+
+                    <!-- Blank Inter-Stimulus Interval (ISI 1s) -->
+                    <div id="stage-blank" class="hidden flex flex-col items-center justify-center text-bellpepper/50">
+                        <span class="text-3xl mb-1">✨</span>
+                        <span class="font-bold text-lg">Bersiap...</span>
+                    </div>
+
+                    <!-- Active Animal Stimulus -->
+                    <div id="stage-animal" class="hidden flex flex-col items-center justify-center w-full h-full p-4">
+                        <div id="stimulus-animal-visual" class="w-48 h-48 sm:w-60 sm:h-60 flex items-center justify-center rounded-2xl overflow-hidden transition-transform">
+                            🐘
+                        </div>
+                    </div>
+
+                    <!-- Ready Prompt before Practice starts -->
+                    <div id="stage-ready" class="hidden p-6">
+                        <div class="text-6xl mb-3">👀👂</div>
+                        <p class="text-xl sm:text-2xl font-extrabold text-bellpepper mb-4">
+                            Perhatikan dan dengarkan 2 hewan yang muncul!
+                        </p>
+                        <button onclick="beginPracticeSequence()" class="btn-playful bg-avocado text-bellpepper px-6 py-3 rounded-2xl font-black text-xl">
+                            Mulai Latihan!
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 5-Second Progress Bar -->
+                <div id="stimulus-timer-wrapper" class="hidden max-w-md mx-auto">
+                    <div class="w-full h-4 bg-creamdark rounded-full border-2 border-bellpepper overflow-hidden">
+                        <div id="stimulus-timer-bar" class="h-full bg-ocean w-full"></div>
+                    </div>
+                    <p class="text-base font-bold text-bellpepper mt-2">Lihat dan dengarkan baik-baik...</p>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- SCREEN 5: RECOGNITION MEMORY                              -->
+            <!-- ========================================================= -->
+            <section id="screen-recognition" class="screen-section hidden animate-pop bg-white rounded-3xl border-4 border-bellpepper p-6 sm:p-8 shadow-playful-lg">
+                <div class="text-center mb-6">
+                    <span id="recog-mode-tag" class="inline-block bg-ocean text-white border-2 border-bellpepper px-4 py-1 rounded-full font-extrabold text-sm uppercase tracking-wider mb-2">
+                        Tantangan Mengingat
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl font-black text-bellpepper">
+                        Mana saja hewan yang tadi muncul?
+                    </h2>
+                    <p id="recog-helper-text" class="text-lg font-bold text-bellpepper/80 mt-1">
+                        Pilih <span id="recog-target-count" class="text-ocean font-black underline">2</span> gambar hewan yang tadi kamu lihat!
+                    </p>
+                    <div class="mt-2 inline-flex items-center gap-2 bg-creamdark border-2 border-bellpepper px-4 py-1 rounded-full">
+                        <span class="text-sm font-extrabold text-bellpepper">Terpilih:</span>
+                        <span id="recog-selected-counter" class="text-base font-black text-ocean">0 / 2</span>
+                    </div>
+                </div>
+
+                <!-- Selection Grid -->
+                <div id="recognition-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-8">
+                    <!-- Cards injected dynamically -->
+                </div>
+
+                <!-- Feedback Banner (Inline) -->
+                <div id="recog-feedback-box" class="hidden mb-6 p-4 rounded-2xl border-3 border-bellpepper text-center animate-pop">
+                    <p id="recog-feedback-title" class="text-xl sm:text-2xl font-black mb-1"></p>
+                    <p id="recog-feedback-desc" class="text-base sm:text-lg font-bold"></p>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="flex flex-wrap items-center justify-center gap-4">
+                    <button id="btn-submit-recognition" onclick="submitRecognition()" class="btn-playful bg-avocado text-bellpepper px-8 py-4 rounded-2xl font-black text-xl sm:text-2xl flex items-center gap-2">
+                        <span>✅</span>
+                        <span>Selesai Memilih</span>
+                    </button>
+
+                    <!-- Post-submission navigation buttons -->
+                    <div id="recog-next-actions" class="hidden flex flex-wrap items-center justify-center gap-3">
+                        <button id="btn-retry-trial" onclick="retryCurrentTrial()" class="btn-playful bg-banana text-bellpepper px-6 py-3.5 rounded-2xl font-extrabold text-lg sm:text-xl">
+                            🔄 Coba Lagi
+                        </button>
+                        <button id="btn-next-memory-level" onclick="prepareNextMemoryStep()" class="btn-playful bg-tangerine text-bellpepper px-6 py-3.5 rounded-2xl font-extrabold text-lg sm:text-xl">
+                            ⭐ Level Berikutnya
+                        </button>
+                        <button id="btn-go-habitat" onclick="startHabitatChallenge()" class="btn-playful bg-ocean text-white px-7 py-3.5 rounded-2xl font-black text-lg sm:text-xl flex items-center gap-2">
+                            <span>🌍</span>
+                            <span>Lanjut ke Rumah Hewan</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- SCREEN 6: HABITAT CHALLENGE                               -->
+            <!-- ========================================================= -->
+            <section id="screen-habitat" class="screen-section hidden animate-pop bg-white rounded-3xl border-4 border-bellpepper p-6 sm:p-8 shadow-playful-lg">
+                <div class="text-center mb-5">
+                    <span class="inline-block bg-tangerine text-bellpepper border-2 border-bellpepper px-4 py-1 rounded-full font-extrabold text-sm uppercase tracking-wider mb-2">
+                        Petualangan Habitat (<span id="habitat-progress-text">1/6</span>)
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl font-black text-bellpepper">
+                        Ayo bantu hewan menemukan rumahnya!
+                    </h2>
+                    <p class="text-base sm:text-lg font-bold text-bellpepper/80 mt-1">
+                        Tarik hewan ke kotaknya, atau klik hewan lalu klik rumahnya.
+                    </p>
+                </div>
+
+                <!-- Active Animal Card to Classify -->
+                <div class="flex flex-col items-center justify-center mb-6">
+                    <div id="habitat-animal-card"
+                         draggable="true"
+                         ondragstart="handleDragStart(event)"
+                         onclick="toggleAnimalSelect('habitat')"
+                         class="cursor-grab active:cursor-grabbing bg-banana border-4 border-bellpepper rounded-3xl p-4 w-52 sm:w-60 text-center shadow-playful transition-transform hover:scale-105">
+                        <div id="habitat-animal-emoji" class="w-36 h-36 sm:w-40 sm:h-40 mx-auto mb-2 flex items-center justify-center rounded-2xl overflow-hidden bg-white border-2 border-bellpepper">🐘</div>
+                        <span id="habitat-selected-hint" class="inline-block mt-1 text-xs font-extrabold bg-white px-2.5 py-0.5 rounded-full border-2 border-bellpepper">
+                            Siap Dipilih
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Inline Feedback Box -->
+                <div id="habitat-feedback-box" class="hidden mb-5 p-3.5 rounded-2xl border-3 border-bellpepper text-center animate-pop">
+                    <p id="habitat-feedback-text" class="text-lg sm:text-xl font-black"></p>
+                </div>
+
+                <!-- 3 Habitat Dropzones -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <!-- Darat -->
+                    <div id="zone-darat"
+                         ondragover="handleDragOver(event, 'zone-darat')"
+                         ondragleave="handleDragLeave('zone-darat')"
+                         ondrop="handleDrop(event, 'Darat', 'habitat')"
+                         onclick="classifyHabitat('Darat')"
+                         class="cursor-pointer rounded-3xl border-4 border-bellpepper bg-tangerine/25 hover:bg-tangerine/40 p-5 text-center transition-all flex flex-col items-center justify-between min-h-[175px]">
+                        <div class="text-5xl mb-2">🌳🏞️</div>
+                        <div>
+                            <h3 class="text-2xl font-black text-bellpepper">Darat</h3>
+                            <p class="text-sm font-bold text-bellpepper/90">Hutan, padang rumput, daratan</p>
+                        </div>
+                        <span class="mt-3 inline-block bg-tangerine border-2 border-bellpepper px-4 py-1.5 rounded-xl font-extrabold text-sm text-bellpepper">
+                            Pilih Darat
+                        </span>
+                    </div>
+
+                    <!-- Laut -->
+                    <div id="zone-air"
+                         ondragover="handleDragOver(event, 'zone-air')"
+                         ondragleave="handleDragLeave('zone-air')"
+                         ondrop="handleDrop(event, 'Air', 'habitat')"
+                         onclick="classifyHabitat('Air')"
+                         class="cursor-pointer rounded-3xl border-4 border-bellpepper bg-ocean/20 hover:bg-ocean/35 p-5 text-center transition-all flex flex-col items-center justify-between min-h-[175px]">
+                        <div class="text-5xl mb-2">🌊🐠</div>
+                        <div>
+                            <h3 class="text-2xl font-black text-bellpepper">Air</h3>
+                            <p class="text-sm font-bold text-bellpepper/90">Perairan, laut, dan sungai</p>
+                        </div>
+                        <span class="mt-3 inline-block bg-ocean border-2 border-bellpepper px-4 py-1.5 rounded-xl font-extrabold text-sm text-white">
+                            Pilih Air
+                        </span>
+                    </div>
+
+                    <!-- Udara -->
+                    <div id="zone-udara"
+                         ondragover="handleDragOver(event, 'zone-udara')"
+                         ondragleave="handleDragLeave('zone-udara')"
+                         ondrop="handleDrop(event, 'Udara', 'habitat')"
+                         onclick="classifyHabitat('Udara')"
+                         class="cursor-pointer rounded-3xl border-4 border-bellpepper bg-bubblegum/25 hover:bg-bubblegum/40 p-5 text-center transition-all flex flex-col items-center justify-between min-h-[175px]">
+                        <div class="text-5xl mb-2">☁️🌤️</div>
+                        <div>
+                            <h3 class="text-2xl font-black text-bellpepper">Udara</h3>
+                            <p class="text-sm font-bold text-bellpepper/90">Langit dan pepohonan tinggi</p>
+                        </div>
+                        <span class="mt-3 inline-block bg-bubblegum border-2 border-bellpepper px-4 py-1.5 rounded-xl font-extrabold text-sm text-bellpepper">
+                            Pilih Udara
+                        </span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- SCREEN 7: DIET CHALLENGE                                  -->
+            <!-- ========================================================= -->
+            <section id="screen-diet" class="screen-section hidden animate-pop bg-white rounded-3xl border-4 border-bellpepper p-6 sm:p-8 shadow-playful-lg">
+                <div class="text-center mb-5">
+                    <span class="inline-block bg-avocado text-bellpepper border-2 border-bellpepper px-4 py-1 rounded-full font-extrabold text-sm uppercase tracking-wider mb-2">
+                        Petualangan Makanan (<span id="diet-progress-text">1/6</span>)
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl font-black text-bellpepper">
+                        Apa makanan kesukaan hewan ini?
+                    </h2>
+                    <p class="text-base sm:text-lg font-bold text-bellpepper/80 mt-1">
+                        Tarik hewan ke kelompok makanannya, atau klik pilihan makanan!
+                    </p>
+                </div>
+
+                <!-- Active Animal Card to Classify -->
+                <div class="flex flex-col items-center justify-center mb-6">
+                    <div id="diet-animal-card"
+                         draggable="true"
+                         ondragstart="handleDragStart(event)"
+                         onclick="toggleAnimalSelect('diet')"
+                         class="cursor-grab active:cursor-grabbing bg-banana border-4 border-bellpepper rounded-3xl p-4 w-52 sm:w-60 text-center shadow-playful transition-transform hover:scale-105">
+                        <div id="diet-animal-emoji" class="w-36 h-36 sm:w-40 sm:h-40 mx-auto mb-2 flex items-center justify-center rounded-2xl overflow-hidden bg-white border-2 border-bellpepper">🦁</div>
+                        <span id="diet-selected-hint" class="inline-block mt-1 text-xs font-extrabold bg-white px-2.5 py-0.5 rounded-full border-2 border-bellpepper">
+                            Siap Dipilih
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Inline Feedback Box -->
+                <div id="diet-feedback-box" class="hidden mb-5 p-3.5 rounded-2xl border-3 border-bellpepper text-center animate-pop">
+                    <p id="diet-feedback-text" class="text-lg sm:text-xl font-black"></p>
+                </div>
+
+                <!-- 3 Diet Dropzones -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <!-- Herbivora -->
+                    <div id="zone-herbivora"
+                         ondragover="handleDragOver(event, 'zone-herbivora')"
+                         ondragleave="handleDragLeave('zone-herbivora')"
+                         ondrop="handleDrop(event, 'Herbivora', 'diet')"
+                         onclick="classifyDiet('Herbivora')"
+                         class="cursor-pointer rounded-3xl border-4 border-bellpepper bg-avocado/25 hover:bg-avocado/40 p-5 text-center transition-all flex flex-col items-center justify-between min-h-[180px]">
+                        <div class="text-5xl mb-2">🌿🥕</div>
+                        <div>
+                            <h3 class="text-2xl font-black text-bellpepper">Herbivora</h3>
+                            <p class="text-sm font-bold text-bellpepper/90">Pemakan tumbuhan &amp; buah</p>
+                        </div>
+                        <span class="mt-3 inline-block bg-avocado border-2 border-bellpepper px-4 py-1.5 rounded-xl font-extrabold text-sm text-bellpepper">
+                            Pilih Herbivora
+                        </span>
+                    </div>
+
+                    <!-- Karnivora -->
+                    <div id="zone-karnivora"
+                         ondragover="handleDragOver(event, 'zone-karnivora')"
+                         ondragleave="handleDragLeave('zone-karnivora')"
+                         ondrop="handleDrop(event, 'Karnivora', 'diet')"
+                         onclick="classifyDiet('Karnivora')"
+                         class="cursor-pointer rounded-3xl border-4 border-bellpepper bg-tangerine/25 hover:bg-tangerine/40 p-5 text-center transition-all flex flex-col items-center justify-between min-h-[180px]">
+                        <div class="text-5xl mb-2">🥩🐟</div>
+                        <div>
+                            <h3 class="text-2xl font-black text-bellpepper">Karnivora</h3>
+                            <p class="text-sm font-bold text-bellpepper/90">Pemakan daging &amp; ikan</p>
+                        </div>
+                        <span class="mt-3 inline-block bg-tangerine border-2 border-bellpepper px-4 py-1.5 rounded-xl font-extrabold text-sm text-bellpepper">
+                            Pilih Karnivora
+                        </span>
+                    </div>
+
+                    <!-- Omnivora -->
+                    <div id="zone-omnivora"
+                         ondragover="handleDragOver(event, 'zone-omnivora')"
+                         ondragleave="handleDragLeave('zone-omnivora')"
+                         ondrop="handleDrop(event, 'Omnivora', 'diet')"
+                         onclick="classifyDiet('Omnivora')"
+                         class="cursor-pointer rounded-3xl border-4 border-bellpepper bg-bubblegum/25 hover:bg-bubblegum/40 p-5 text-center transition-all flex flex-col items-center justify-between min-h-[180px]">
+                        <div class="text-5xl mb-2">🍓🐟</div>
+                        <div>
+                            <h3 class="text-2xl font-black text-bellpepper">Omnivora</h3>
+                            <p class="text-sm font-bold text-bellpepper/90">Pemakan tumbuhan &amp; daging</p>
+                        </div>
+                        <span class="mt-3 inline-block bg-bubblegum border-2 border-bellpepper px-4 py-1.5 rounded-xl font-extrabold text-sm text-bellpepper">
+                            Pilih Omnivora
+                        </span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================= -->
+            <!-- SCREEN 8: CELEBRATION & EXPLORER SUMMARY                  -->
+            <!-- ========================================================= -->
+            <section id="screen-summary" class="screen-section hidden animate-pop bg-white rounded-3xl border-4 border-bellpepper p-6 sm:p-10 shadow-playful-lg text-center">
+                <div class="flex justify-center gap-3 text-5xl sm:text-6xl mb-4 animate-bounce">
+                    <span>🌟</span><span>🏆</span><span>🌟</span>
+                </div>
+
+                <h2 class="text-3xl sm:text-4xl font-black text-bellpepper mb-2">
+                    Hebat, Penjelajah Satwa!
+                </h2>
+                <p id="summary-greeting" class="text-xl font-bold text-ocean mb-6">
+                    Kamu telah menyelesaikan seluruh petualangan hari ini!
+                </p>
+
+                <!-- 3 Star Reward Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                    <div class="bg-creamdark rounded-2xl border-3 border-bellpepper p-4">
+                        <div class="text-4xl mb-1">🧠</div>
+                        <p class="text-xs font-extrabold uppercase text-bellpepper/70">Tantangan Memori</p>
+                        <p id="summary-memory-score" class="text-2xl font-black text-bellpepper mt-1">0 / 0</p>
+                        <p class="text-xs font-bold text-ocean mt-1">Hewan Dikenali</p>
+                    </div>
+
+                    <div class="bg-creamdark rounded-2xl border-3 border-bellpepper p-4">
+                        <div class="text-4xl mb-1">🌍</div>
+                        <p class="text-xs font-extrabold uppercase text-bellpepper/70">Rumah Hewan</p>
+                        <p id="summary-habitat-score" class="text-2xl font-black text-bellpepper mt-1">0 / 6</p>
+                        <p class="text-xs font-bold text-tangerine mt-1">Habitat Tepat</p>
+                    </div>
+
+                    <div class="bg-creamdark rounded-2xl border-3 border-bellpepper p-4">
+                        <div class="text-4xl mb-1">🥗</div>
+                        <p class="text-xs font-extrabold uppercase text-bellpepper/70">Makanan Hewan</p>
+                        <p id="summary-diet-score" class="text-2xl font-black text-bellpepper mt-1">0 / 6</p>
+                        <p class="text-xs font-bold text-avocado mt-1">Kelompok Makanan</p>
+                    </div>
+                </div>
+
+                <!-- Badge Earned -->
+                <div class="max-w-md mx-auto bg-banana border-3 border-bellpepper rounded-2xl p-4 mb-8 flex items-center justify-center gap-4">
+                    <span class="text-5xl">🎖️</span>
+                    <div class="text-left">
+                        <p class="text-xs font-extrabold uppercase text-bellpepper">Lencana Diraih</p>
+                        <p class="text-xl font-black text-bellpepper">Sahabat Satwa Cerdas</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-center gap-4">
+                    <button onclick="resetAndPlayAgain()" class="btn-playful bg-avocado text-bellpepper px-8 py-4 rounded-2xl font-black text-xl flex items-center gap-2">
+                        <span>🔄</span>
+                        <span>Main Lagi</span>
+                    </button>
+                    <button onclick="openDashboardModal()" class="btn-playful bg-bubblegum text-bellpepper px-6 py-4 rounded-2xl font-extrabold text-xl flex items-center gap-2">
+                        <span>📊</span>
+                        <span>Lihat Catatan Pendamping</span>
+                    </button>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="w-full py-3 px-4 text-center text-xs font-bold text-bellpepper/70">
+        Petualangan Memori Satwa • Pembelajaran Interaktif Anak SD (Kelas 1–3)
+    </footer>
+
+    <!-- ========================================================= -->
+    <!-- MODAL 1: AUDIO SETTINGS                                   -->
+    <!-- ========================================================= -->
+    <div id="modal-audio" class="hidden fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl border-4 border-bellpepper p-6 sm:p-8 max-w-md w-full shadow-playful-lg animate-pop">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-2xl font-black text-bellpepper flex items-center gap-2">
+                    <span>🔊</span> Pengaturan Suara
+                </h3>
+                <button onclick="closeModal('modal-audio')" class="w-10 h-10 rounded-xl bg-creamdark border-2 border-bellpepper font-black text-lg">✕</button>
+            </div>
+
+            <div class="space-y-4 mb-6">
+                <div class="bg-creamdark p-4 rounded-2xl border-2 border-bellpepper flex items-center justify-between">
+                    <div>
+                        <p class="font-extrabold text-lg text-bellpepper">Suara Narasi &amp; Efek</p>
+                        <p class="text-xs font-bold text-bellpepper/70">Membacakan nama hewan &amp; petunjuk</p>
+                    </div>
+                    <button id="modal-btn-mute" onclick="toggleMute()" class="btn-playful bg-avocado text-bellpepper px-4 py-2 rounded-xl font-extrabold text-sm">
+                        Aktif
+                    </button>
+                </div>
+
+                <div class="bg-creamdark p-4 rounded-2xl border-2 border-bellpepper">
+                    <label for="speech-rate-range" class="block font-extrabold text-base text-bellpepper mb-1">
+                        Kecepatan Suara Narasi: <span id="speech-rate-label" class="text-ocean">Normal (0.95x)</span>
+                    </label>
+                    <input id="speech-rate-range" type="range" min="0.75" max="1.15" step="0.05" value="0.95" oninput="updateSpeechRate(this.value)" class="w-full accent-ocean cursor-pointer">
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-3">
+                <button onclick="testAudioPreview()" class="btn-playful bg-ocean text-white px-4 py-3 rounded-2xl font-extrabold text-base flex-1">
+                    🔈 Tes Suara
+                </button>
+                <button onclick="closeModal('modal-audio')" class="btn-playful bg-avocado text-bellpepper px-6 py-3 rounded-2xl font-black text-base">
+                    Selesai
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL 2: COMPANION / RESEARCHER TELEMETRY DASHBOARD       -->
+    <!-- ========================================================= -->
+    <div id="modal-dashboard" class="hidden fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl border-4 border-bellpepper p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-playful-lg animate-pop">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <span class="text-xs font-extrabold uppercase tracking-wider bg-bubblegum px-3 py-0.5 rounded-full border-2 border-bellpepper">Catatan Pendamping / Guru</span>
+                    <h3 class="text-2xl font-black text-bellpepper mt-1">Ringkasan Aktivitas Belajar</h3>
+                </div>
+                <button onclick="closeModal('modal-dashboard')" class="w-10 h-10 rounded-xl bg-creamdark border-2 border-bellpepper font-black text-lg">✕</button>
+            </div>
+
+            <!-- Participant Info -->
+            <div class="bg-creamdark rounded-2xl border-2 border-bellpepper p-4 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                <div>
+                    <span class="block text-xs font-bold text-bellpepper/70">Penjelajah</span>
+                    <span id="dash-name" class="font-black text-bellpepper">-</span>
+                </div>
+                <div>
+                    <span class="block text-xs font-bold text-bellpepper/70">Kelas</span>
+                    <span id="dash-grade" class="font-black text-bellpepper">-</span>
+                </div>
+                <div>
+                    <span class="block text-xs font-bold text-bellpepper/70">Akurasi Memori</span>
+                    <span id="dash-mem-acc" class="font-black text-ocean">0%</span>
+                </div>
+                <div>
+                    <span class="block text-xs font-bold text-bellpepper/70">Rata-rata Respon</span>
+                    <span id="dash-avg-rt" class="font-black text-tangerine">0.0 dtk</span>
+                </div>
+            </div>
+
+            <!-- Trial Logs Table -->
+            <div class="border-2 border-bellpepper rounded-2xl overflow-hidden mb-5">
+                <div class="bg-banana px-4 py-2 font-extrabold text-sm text-bellpepper border-b-2 border-bellpepper flex justify-between">
+                    <span>Log Percobaan Sesi Ini</span>
+                    <span id="dash-total-events">0 Aktivitas</span>
+                </div>
+                <div id="dash-log-list" class="max-h-56 overflow-y-auto divide-y-2 divide-creamdark bg-white p-2 text-xs sm:text-sm font-bold">
+                    <p class="p-4 text-center text-bellpepper/60">Belum ada aktivitas tercatat.</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <button onclick="copyTelemetryReport()" class="btn-playful bg-ocean text-white px-4 py-2.5 rounded-xl font-extrabold text-sm flex items-center gap-1.5">
+                    <span>📋</span> <span id="btn-copy-label">Salin Ringkasan Data</span>
+                </button>
+                <button onclick="closeModal('modal-dashboard')" class="btn-playful bg-avocado text-bellpepper px-6 py-2.5 rounded-xl font-black text-sm">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL 3: CUSTOM CONFIRMATION (NO BROWSER ALERT/CONFIRM)   -->
+    <!-- ========================================================= -->
+    <div id="modal-confirm" class="hidden fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl border-4 border-bellpepper p-6 max-w-sm w-full shadow-playful-lg text-center animate-pop">
+            <div class="text-5xl mb-3">🏠</div>
+            <h3 class="text-2xl font-black text-bellpepper mb-2">Kembali ke Beranda?</h3>
+            <p class="text-base font-bold text-bellpepper/80 mb-6">
+                Apakah kamu ingin kembali ke halaman awal petualangan?
+            </p>
+            <div class="flex items-center justify-center gap-3">
+                <button onclick="closeModal('modal-confirm')" class="btn-playful bg-creamdark text-bellpepper px-5 py-3 rounded-2xl font-extrabold text-base flex-1">
+                    Lanjut Main
+                </button>
+                <button onclick="executeGoHome()" class="btn-playful bg-tangerine text-bellpepper px-5 py-3 rounded-2xl font-black text-base flex-1">
+                    Ya, Kembali
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* =====================================================================
+         * 1. DATASET SATWA (31 HEWAN LENGKAP DENGAN FOTO ASLI, HABITAT & MAKANAN)
+         * ===================================================================== */
+        const ANIMALS = [
+            // --- HABITAT DARAT (12 Hewan) ---
+            { id: 'gajah', name: 'Gajah', image: 'Gajah.png', emoji: '🐘', habitat: 'Darat', diet: 'Herbivora', fact: 'Gajah hidup di daratan dan suka makan rumput, daun, serta buah.' },
+            { id: 'singa', name: 'Singa', image: 'Singa.jpg', emoji: '🦁', habitat: 'Darat', diet: 'Karnivora', fact: 'Singa tinggal di padang rumput daratan dan memakan daging.' },
+            { id: 'harimau', name: 'Harimau', image: 'Harimau.jpg', emoji: '🐯', habitat: 'Darat', diet: 'Karnivora', fact: 'Harimau tinggal di hutan darat dan merupakan pemakan daging.' },
+            { id: 'kuda', name: 'Kuda', image: 'Kuda.jpg', emoji: '🐴', habitat: 'Darat', diet: 'Herbivora', fact: 'Kuda berlari kencang di padang rumput darat dan memakan rumput.' },
+            { id: 'beruang', name: 'Beruang', image: 'Beruang.png', emoji: '🐻', habitat: 'Darat', diet: 'Omnivora', fact: 'Beruang hidup di hutan daratan dan makan buah beri serta ikan.' },
+            { id: 'hyena', name: 'Hyena', image: 'Hyena.png', emoji: '🐺', habitat: 'Darat', diet: 'Karnivora', fact: 'Hyena hidup di sabana daratan dan merupakan pemakan daging.' },
+            { id: 'jerapah', name: 'Jerapah', image: 'Jerapah.png', emoji: '🦒', habitat: 'Darat', diet: 'Herbivora', fact: 'Jerapah berleher panjang hidup di darat dan memakan daun pohon.' },
+            { id: 'monyet', name: 'Monyet', image: 'Monyet.png', emoji: '🐒', habitat: 'Darat', diet: 'Omnivora', fact: 'Monyet tinggal di pepohonan darat dan makan buah serta serangga.' },
+            { id: 'sapi', name: 'Sapi', image: 'Sapi.png', emoji: '🐄', habitat: 'Darat', diet: 'Herbivora', fact: 'Sapi hidup di padang rumput daratan dan makan rumput segar.' },
+            { id: 'kambing', name: 'Kambing', image: 'Kambing.jpg', emoji: '🐐', habitat: 'Darat', diet: 'Herbivora', fact: 'Kambing hidup di darat dan gemar memakan dedaunan serta rumput.' },
+            { id: 'zebra', name: 'Zebra', image: 'Zebra.jpg', emoji: '🦓', habitat: 'Darat', diet: 'Herbivora', fact: 'Zebra berbulu belang hitam putih hidup di darat dan makan rumput.' },
+            { id: 'kelinci', name: 'Kelinci', image: 'Kelinci.jpg', emoji: '🐰', habitat: 'Darat', diet: 'Herbivora', fact: 'Kelinci melompat di darat dan suka makan wortel serta sayuran.' },
+            { id: 'domba', name: 'Domba', image: 'Domba.jpg', emoji: '🐑', habitat: 'Darat', diet: 'Herbivora', fact: 'Domba berbulu tebal hidup di padang rumput darat dan makan rumput.' },
+
+            // --- HABITAT AIR (9 Hewan) ---
+            { id: 'ikan_badut', name: 'Ikan Badut', image: 'Ikan Badut.png', emoji: '🐠', habitat: 'Air', diet: 'Omnivora', fact: 'Ikan badut berenang di terumbu karang air laut dan makan plankton serta alga.' },
+            { id: 'lumba', name: 'Lumba-Lumba', image: 'Lumba-Lumba.png', emoji: '🐬', habitat: 'Air', diet: 'Karnivora', fact: 'Lumba-lumba berenang di air laut dan memakan ikan-ikan kecil.' },
+            { id: 'hiu', name: 'Hiu', image: 'Hiu.png', emoji: '🦈', habitat: 'Air', diet: 'Karnivora', fact: 'Hiu hidup di dalam air laut dan merupakan pemakan ikan.' },
+            { id: 'ikan_pari', name: 'Ikan Pari', image: 'Ikan Pari.png', emoji: '🐟', habitat: 'Air', diet: 'Karnivora', fact: 'Ikan pari berenang melebar di dasar perairan dan makan udang atau ikan kecil.' },
+            { id: 'kuda_laut', name: 'Kuda Laut', image: 'Kuda Laut.png', emoji: '🐡', habitat: 'Air', diet: 'Karnivora', fact: 'Kuda laut hidup di perairan dan memakan udang renik kecil.' },
+            { id: 'penyu', name: 'Penyu', image: 'Penyu.png', emoji: '🐢', habitat: 'Air', diet: 'Omnivora', fact: 'Penyu berenang di air laut dan makan rumput laut serta ubur-ubur.' },
+            { id: 'ubur_ubur', name: 'Ubur-Ubur', image: 'Ubur-Ubur.jpg', emoji: '🪼', habitat: 'Air', diet: 'Karnivora', fact: 'Ubur-ubur melayang di air dan memakan plankton serta ikan sangat kecil.' },
+            { id: 'bintang_laut', name: 'Bintang Laut', image: 'Bintang Laut.png', emoji: '⭐', habitat: 'Air', diet: 'Karnivora', fact: 'Bintang laut hidup di dasar perairan dan memakan kerang-kerang kecil.' },
+            { id: 'bulu_babi', name: 'Bulu Babi', image: 'Bulu babi.jpg', emoji: '🦔', habitat: 'Air', diet: 'Omnivora', fact: 'Bulu babi berduri hidup di dasar perairan dan memakan ganggang laut.' },
+
+            // --- HABITAT UDARA (9 Hewan) ---
+            { id: 'elang', name: 'Elang', image: 'Elang.jpg', emoji: '🦅', habitat: 'Udara', diet: 'Karnivora', fact: 'Elang terbang tinggi di udara dan memakan ikan atau hewan kecil.' },
+            { id: 'burung_beo', name: 'Burung Beo', image: 'Burung Beo.jpg', emoji: '🦜', habitat: 'Udara', diet: 'Omnivora', fact: 'Burung beo terbang di udara dan makan buah-buahan, biji, serta serangga kecil.' },
+            { id: 'kupu_kupu', name: 'Kupu-Kupu', image: 'Kupu-Kupu.jpg', emoji: '🦋', habitat: 'Udara', diet: 'Herbivora', fact: 'Kupu-kupu terbang di udara dan mengisap nektar manis dari bunga.' },
+            { id: 'lebah', name: 'Lebah', image: 'Lebah.jpg', emoji: '🐝', habitat: 'Udara', diet: 'Herbivora', fact: 'Lebah terbang di udara dan mengumpulkan nektar serta serbuk sari bunga.' },
+            { id: 'capung', name: 'Capung', image: 'Capung.jpg', emoji: '🪰', habitat: 'Udara', diet: 'Karnivora', fact: 'Capung terbang lincah di udara dan memakan serangga-serangga kecil.' },
+            { id: 'kelelawar', name: 'Kelelawar', image: 'Kelelawar.jpg', emoji: '🦇', habitat: 'Udara', diet: 'Omnivora', fact: 'Kelelawar terbang di udara malam dan makan buah-buahan atau serangga.' },
+            { id: 'burung_hantu', name: 'Burung Hantu', image: 'Burung Hantu.jpg', emoji: '🦉', habitat: 'Udara', diet: 'Karnivora', fact: 'Burung hantu terbang di udara malam dan memakan tikus serta serangga.' },
+            { id: 'burung_merpati', name: 'Burung Merpati', image: 'Burung Merpati.jpg', emoji: '🕊️', habitat: 'Udara', diet: 'Herbivora', fact: 'Burung merpati terbang di udara dan gemar memakan biji-bijian.' },
+            { id: 'kepik', name: 'Kepik', image: 'Kepik.jpg', emoji: '🐞', habitat: 'Udara', diet: 'Omnivora', fact: 'Kepik bisa terbang dengan sayap kecilnya dan makan kutu daun serta serbuk bunga.' }
+        ];
+
+        // Helper untuk merender foto hewan asli dengan cadangan emoji otomatis jika berkas lokal tidak ditemukan
+        function renderAnimalVisual(animal, sizeClass = 'w-full h-full object-cover rounded-2xl', emojiSizeClass = 'text-6xl sm:text-7xl') {
+            return `
+                <img src="${animal.image}"
+                     alt="${animal.name}"
+                     class="${sizeClass}"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <span style="display:none" class="w-full h-full items-center justify-center ${emojiSizeClass}">${animal.emoji}</span>
+            `;
+        }
+
+        const LEVEL_CONFIG = {
+            1: { count: 2, label: 'Pemula' },
+            2: { count: 3, label: 'Menengah' },
+            3: { count: 4, label: 'Mahir' },
+            4: { count: 5, label: 'Tantangan' }
+        };
+
+        // Audio Settings & Dubbing File Mapping (2 awal + 14 tambahan = 16 file audio)
+        const DUBBED_AUDIO_FILES = {
+            cara_bermain: ['instruksi-utama-cara-bermain.mp3', 'Instruksi-utama-cara-bermain.mp4'],
+            contoh_panda: ['Tombol-contoh-suara.mp3', 'Tombol-contoh-suara.mp4'],
+            persiapan_latihan: ['Persiapan-latihan.mp3'],
+            persiapan_memori: ['Persiapan-tantangan-memori.mp3'],
+            tanya_memori_2: ['Pertanyaan-tantangan-memori-2hewan.mp3'],
+            tanya_memori_3: ['Pertanyaan-tantangan-memori-3hewan.mp3'],
+            tanya_memori_4: ['Pertanyaan-tantangan-memori-4hewan.mp3'],
+            tanya_memori_5: ['Pertanyaan-tantangan-memori-5hewan.mp3'],
+            pilihan_kurang: ['Peringatan-jumlah-pilihan-kurang.mp3'],
+            hasil_memori_benar: ['Hasil-memori-benar-semua.mp3'],
+            hasil_memori_salah: ['Hasil-memori-ada-yang-salah.mp3'],
+            tanya_rumah_hewan: ['Pertaanyaan-rumah-hewan.mp3', 'Pertanyaan-rumah-hewan.mp3'],
+            tanya_makanan_hewan: ['Pertanyaan-makanan-hewan.mp3'],
+            tepat_sekali: ['Tepat-sekali.mp3'],
+            kurang_tepat: ['Kurang-tepat.mp3'],
+            halaman_akhir: ['Halaman-akhir.mp3']
+        };
+        let activeDubbingPlayer = null;
+        let lastAudioKey = 'cara_bermain';
+
+        const state = {
+            participantName: 'Penjelajah Cilik',
+            grade: 'Kelas 2',
+            currentScreen: 'welcome',
+            
+            // Audio Settings
+            isMuted: false,
+            speechRate: 0.95,
+            lastInstruction: 'Cara bermain: Satu, lihat gambar hewan. Dua, dengarkan nama hewan. Tiga, ingat nama hewan yang muncul. Empat, pilih hewan yang tadi kamu lihat.',
+
+            // Stimulus & Memory Trial State
+            mode: 'practice', // 'practice' | 'memory'
+            memoryLevel: 1,
+            targetAnimals: [],
+            distractorAnimals: [],
+            gridAnimals: [],
+            selectedIds: new Set(),
+            trialStartTime: 0,
+            isStimulusRunning: false,
+            stimulusTimers: [],
+
+            // Scores & Progress
+            memoryCorrectTotal: 0,
+            memoryTargetTotal: 0,
+            completedMemoryLevels: new Set(),
+
+            // Habitat Challenge State
+            habitatQueue: [],
+            habitatIndex: 0,
+            habitatScore: 0,
+            habitatCardSelected: false,
+            habitatStartTime: 0,
+
+            // Diet Challenge State
+            dietQueue: [],
+            dietIndex: 0,
+            dietScore: 0,
+            dietCardSelected: false,
+            dietStartTime: 0,
+
+            // Structured Telemetry Logs
+            logs: []
+        };
+
+        /* =====================================================================
+         * 3. WEB AUDIO API (GENTLE SFX) + DUBBED AUDIO PLAYER
+         * ===================================================================== */
+        let audioCtx = null;
+
+        function ensureAudioContext() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) {
+                    audioCtx = new AudioContextClass();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playTone(freq, duration = 0.18, type = 'sine', volume = 0.15, delay = 0) {
+            if (state.isMuted) return;
+            try {
+                ensureAudioContext();
+                if (!audioCtx) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+
+                gain.gain.setValueAtTime(0.001, audioCtx.currentTime + delay);
+                gain.gain.exponentialRampToValueAtTime(volume, audioCtx.currentTime + delay + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime + delay);
+                osc.stop(audioCtx.currentTime + delay + duration + 0.02);
+            } catch (e) {
+                // Fail gracefully if audio blocked
+            }
+        }
+
+        function playSFX(kind) {
+            if (state.isMuted) return;
+            if (kind === 'click') {
+                playTone(523.25, 0.09, 'triangle', 0.12, 0);
+            } else if (kind === 'success') {
+                playTone(523.25, 0.14, 'sine', 0.16, 0);
+                playTone(659.25, 0.14, 'sine', 0.16, 0.11);
+                playTone(783.99, 0.24, 'sine', 0.18, 0.22);
+            } else if (kind === 'gentle-retry') {
+                playTone(392.00, 0.18, 'sine', 0.12, 0);
+                playTone(349.23, 0.22, 'sine', 0.12, 0.16);
+            } else if (kind === 'fanfare') {
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((n, idx) => playTone(n, 0.22, 'triangle', 0.16, idx * 0.12));
+            }
+        }
+
+        function toggleMute() {
+            state.isMuted = !state.isMuted;
+            if (state.isMuted) {
+                stopAllVoiceAudio();
+            } else {
+                playSFX('click');
+            }
+            updateAudioUI();
+        }
+
+        function stopAllVoiceAudio() {
+            if (activeDubbingPlayer) {
+                try {
+                    activeDubbingPlayer.pause();
+                    activeDubbingPlayer.currentTime = 0;
+                } catch (e) {}
+                activeDubbingPlayer = null;
+            }
+            if ('speechSynthesis' in window) {
+                try {
+                    window.speechSynthesis.cancel();
+                } catch (e) {}
+            }
+        }
+
+        function updateAudioUI() {
+            const iconMute = document.getElementById('icon-mute');
+            const modalBtnMute = document.getElementById('modal-btn-mute');
+            if (iconMute) {
+                iconMute.textContent = state.isMuted ? '🔇' : '🔊';
+            }
+            if (modalBtnMute) {
+                modalBtnMute.textContent = state.isMuted ? 'Mati' : 'Aktif';
+                modalBtnMute.className = state.isMuted
+                    ? 'btn-playful bg-bubblegum text-bellpepper px-4 py-2 rounded-xl font-extrabold text-sm'
+                    : 'btn-playful bg-avocado text-bellpepper px-4 py-2 rounded-xl font-extrabold text-sm';
+            }
+        }
+
+        function updateSpeechRate(val) {
+            state.speechRate = parseFloat(val);
+            const label = document.getElementById('speech-rate-label');
+            if (label) {
+                label.textContent = `Normal (${state.speechRate.toFixed(2)}x)`;
+            }
+        }
+
+        function playDubbedAudio(audioKey, fallbackText = '', rememberInstruction = false) {
+            if (rememberInstruction) {
+                lastAudioKey = audioKey;
+                state.lastInstruction = fallbackText;
+            }
+            if (state.isMuted) return;
+
+            stopAllVoiceAudio();
+            const sources = DUBBED_AUDIO_FILES[audioKey];
+            if (!sources || sources.length === 0) return;
+
+            let sourceIdx = 0;
+            const tryPlaySource = () => {
+                if (state.isMuted) return;
+                if (sourceIdx >= sources.length) {
+                    return;
+                }
+                const player = new Audio(sources[sourceIdx]);
+                player.playbackRate = state.speechRate;
+                activeDubbingPlayer = player;
+                player.onerror = () => {
+                    sourceIdx++;
+                    tryPlaySource();
+                };
+                player.play().catch(() => {
+                    sourceIdx++;
+                    tryPlaySource();
+                });
+            };
+
+            tryPlaySource();
+        }
+
+        function speakAnimalDubbed(animalName) {
+            if (state.isMuted || !animalName) return;
+            stopAllVoiceAudio();
+            const slug = animalName.replace(/\s+/g, '-');
+            const titleCaseHyphen = animalName
+                .split(/[\s-]+/)
+                .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                .join('-');
+            const sentenceCaseHyphen = slug.charAt(0).toUpperCase() + slug.slice(1).toLowerCase();
+            const baseNames = Array.from(new Set([
+                animalName,
+                slug,
+                sentenceCaseHyphen,
+                titleCaseHyphen,
+                animalName.toLowerCase(),
+                slug.toLowerCase()
+            ]));
+            const extensions = ['mp3', 'm4a', 'mp4', 'wav', 'ogg'];
+            const candidates = [];
+            extensions.forEach(ext => {
+                baseNames.forEach(base => {
+                    candidates.push(`${base}.${ext}`);
+                });
+            });
+            let idx = 0;
+            const tryPlay = () => {
+                if (state.isMuted || idx >= candidates.length) return;
+                const player = new Audio(candidates[idx]);
+                player.playbackRate = state.speechRate;
+                activeDubbingPlayer = player;
+                player.onerror = () => { idx++; tryPlay(); };
+                player.play().catch(() => { idx++; tryPlay(); });
+            };
+            tryPlay();
+        }
+
+        function testAudioPreview() {
+            playSFX('click');
+            playDubbedAudio('contoh_panda', 'Panda! Ini adalah Panda.', false);
+        }
+
+        function repeatCurrentInstruction() {
+            playSFX('click');
+            if (lastAudioKey && DUBBED_AUDIO_FILES[lastAudioKey]) {
+                playDubbedAudio(lastAudioKey, state.lastInstruction, false);
+            }
+        }
+
+        /* =====================================================================
+         * 4. NAVIGATION & SCREEN MANAGEMENT
+         * ===================================================================== */
+        function showScreen(screenName) {
+            clearStimulusTimers();
+            stopAllVoiceAudio();
+            state.currentScreen = screenName;
+
+            document.querySelectorAll('.screen-section').forEach(sec => {
+                sec.classList.add('hidden');
+            });
+
+            const target = document.getElementById(`screen-${screenName}`);
+            if (target) {
+                target.classList.remove('hidden');
+            }
+
+            // Show/hide top progress and repeat audio button
+            const progressEl = document.getElementById('top-progress-container');
+            const repeatBtn = document.getElementById('btn-repeat-audio');
+            if (screenName === 'welcome') {
+                progressEl.classList.add('hidden');
+                repeatBtn.classList.add('hidden');
+            } else {
+                progressEl.classList.remove('hidden');
+                repeatBtn.classList.remove('hidden');
+            }
+
+            updatePawProgress(screenName);
+        }
+
+        function updatePawProgress(screenName) {
+            const stepMap = {
+                'tutorial': 1,
+                'stimulus': state.mode === 'practice' ? 1 : 2,
+                'recognition': state.mode === 'practice' ? 1 : 2,
+                'habitat': 3,
+                'diet': 4,
+                'summary': 5
+            };
+            const currentStep = stepMap[screenName] || 0;
+            document.querySelectorAll('#paw-steps span').forEach(el => {
+                const s = parseInt(el.getAttribute('data-step'), 10);
+                if (s <= currentStep) {
+                    el.classList.remove('opacity-30');
+                    el.classList.add('opacity-100', 'scale-110');
+                } else {
+                    el.classList.add('opacity-30');
+                    el.classList.remove('opacity-100', 'scale-110');
+                }
+            });
+        }
+
+        function captureExplorerProfile() {
+            const nameInput = document.getElementById('input-participant-id').value.trim();
+            const gradeSelect = document.getElementById('select-grade').value;
+            state.participantName = nameInput || 'Penjelajah Cilik';
+            state.grade = gradeSelect;
+        }
+
+        function startAdventureFromWelcome() {
+            playSFX('click');
+            captureExplorerProfile();
+            goToTutorial();
+        }
+
+        function goToTutorial() {
+            playSFX('click');
+            captureExplorerProfile();
+            showScreen('tutorial');
+            playDubbedAudio(
+                'cara_bermain',
+                'Cara bermain: Satu, lihat gambar hewan. Dua, dengarkan nama hewan. Tiga, ingat nama hewan yang muncul. Empat, pilih hewan yang tadi kamu lihat.',
+                true
+            );
+        }
+
+        function confirmGoHome() {
+            playSFX('click');
+            if (state.currentScreen === 'welcome') return;
+            openModal('modal-confirm');
+        }
+
+        function executeGoHome() {
+            closeModal('modal-confirm');
+            clearStimulusTimers();
+            stopAllVoiceAudio();
+            showScreen('welcome');
+        }
+
+        /* =====================================================================
+         * 5. STIMULUS PRESENTATION ENGINE (FIXATION -> 5s ANIMAL -> 1s ISI)
+         * ===================================================================== */
+        function clearStimulusTimers() {
+            state.isStimulusRunning = false;
+            state.stimulusTimers.forEach(t => {
+                clearTimeout(t);
+                clearInterval(t);
+            });
+            state.stimulusTimers = [];
+        }
+
+        function shuffleArray(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function showStageElement(stageId) {
+            ['stage-fixation', 'stage-blank', 'stage-animal', 'stage-ready'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            if (stageId) {
+                document.getElementById(stageId).classList.remove('hidden');
+            }
+        }
+
+        // --- PRACTICE SESSION ---
+        function startPractice() {
+            playSFX('click');
+            state.mode = 'practice';
+            showScreen('stimulus');
+
+            document.getElementById('stimulus-mode-badge').textContent = 'Sesi Latihan';
+            document.getElementById('stimulus-mode-badge').className = 'bg-bubblegum text-bellpepper border-2 border-bellpepper px-4 py-1 rounded-full font-extrabold text-base';
+            document.getElementById('stimulus-counter-badge').textContent = '2 Hewan Latihan';
+            document.getElementById('level-selector-panel').classList.add('hidden');
+            document.getElementById('stimulus-timer-wrapper').classList.add('hidden');
+
+            showStageElement('stage-ready');
+            playDubbedAudio(
+                'persiapan_latihan',
+                'Ayo berlatih dulu! Tekan tombol Mulai Latihan, lalu perhatikan dan dengarkan dua hewan yang muncul.',
+                true
+            );
+        }
+
+        function beginPracticeSequence() {
+            playSFX('click');
+            const shuffled = shuffleArray(ANIMALS);
+            state.targetAnimals = shuffled.slice(0, 2);
+            state.distractorAnimals = shuffled.slice(2, 4);
+            runStimulusSequence(state.targetAnimals);
+        }
+
+        // --- MEMORY CHALLENGE SESSION ---
+        function enterMemoryChallengeSetup(defaultLevel = 1) {
+            state.mode = 'memory';
+            showScreen('stimulus');
+
+            document.getElementById('stimulus-mode-badge').textContent = 'Tantangan Memori';
+            document.getElementById('stimulus-mode-badge').className = 'bg-tangerine text-bellpepper border-2 border-bellpepper px-4 py-1 rounded-full font-extrabold text-base';
+            document.getElementById('level-selector-panel').classList.remove('hidden');
+            document.getElementById('stimulus-timer-wrapper').classList.add('hidden');
+            showStageElement('stage-blank');
+
+            selectMemoryLevel(defaultLevel);
+            playDubbedAudio(
+                'persiapan_memori',
+                'Sekarang masuk ke Tantangan Memori! Pilih level dan tekan Mulai Mengingat.',
+                true
+            );
+        }
+
+        function selectMemoryLevel(lvl) {
+            playSFX('click');
+            state.memoryLevel = lvl;
+            const count = LEVEL_CONFIG[lvl].count;
+            document.getElementById('stimulus-counter-badge').textContent = `${count} Hewan`;
+
+            for (let i = 1; i <= 4; i++) {
+                const btn = document.getElementById(`lvl-btn-${i}`);
+                if (i === lvl) {
+                    btn.classList.remove('bg-white');
+                    btn.classList.add('bg-avocado');
+                } else {
+                    btn.classList.remove('bg-avocado');
+                    btn.classList.add('bg-white');
+                }
+            }
+        }
+
+        function beginMemoryTrial() {
+            playSFX('click');
+            document.getElementById('level-selector-panel').classList.add('hidden');
+
+            const targetCount = LEVEL_CONFIG[state.memoryLevel].count;
+            const distractorCount = Math.min(4, targetCount + 1); // Total options 5 to 8 cards
+
+            const shuffled = shuffleArray(ANIMALS);
+            state.targetAnimals = shuffled.slice(0, targetCount);
+            state.distractorAnimals = shuffled.slice(targetCount, targetCount + distractorCount);
+
+            runStimulusSequence(state.targetAnimals);
+        }
+
+        function runStimulusSequence(animalsToShow) {
+            clearStimulusTimers();
+            state.isStimulusRunning = true;
+
+            const timerWrapper = document.getElementById('stimulus-timer-wrapper');
+            const timerBar = document.getElementById('stimulus-timer-bar');
+            const counterBadge = document.getElementById('stimulus-counter-badge');
+
+            timerWrapper.classList.add('hidden');
+            showStageElement('stage-fixation');
+            counterBadge.textContent = 'Bersiap...';
+
+            // Step 1: 1000ms Fixation Cross (+)
+            const startTimer = setTimeout(() => {
+                let index = 0;
+
+                function presentNextAnimal() {
+                    if (!state.isStimulusRunning) return;
+                    if (index >= animalsToShow.length) {
+                        // Finished sequence -> Go to Recognition Screen
+                        timerWrapper.classList.add('hidden');
+                        openRecognitionScreen();
+                        return;
+                    }
+
+                    const animal = animalsToShow[index];
+                    counterBadge.textContent = `Hewan ${index + 1} dari ${animalsToShow.length}`;
+
+                    // Show Animal & Speak Dubbed Name (if available)
+                    document.getElementById('stimulus-animal-visual').innerHTML = renderAnimalVisual(
+                        animal,
+                        'w-full h-full object-cover rounded-2xl border-3 border-bellpepper shadow-playful-sm',
+                        'text-8xl sm:text-9xl'
+                    );
+                    showStageElement('stage-animal');
+                    speakAnimalDubbed(animal.name);
+
+                    // 5000ms Progress Bar Animation
+                    timerWrapper.classList.remove('hidden');
+                    timerBar.style.width = '100%';
+                    const duration = 5000;
+                    const startTime = Date.now();
+
+                    const barInterval = setInterval(() => {
+                        const elapsed = Date.now() - startTime;
+                        const pct = Math.max(0, 100 - (elapsed / duration) * 100);
+                        timerBar.style.width = `${pct}%`;
+                        if (pct <= 0) {
+                            clearInterval(barInterval);
+                        }
+                    }, 80);
+                    state.stimulusTimers.push(barInterval);
+
+                    // After 5000ms -> 1000ms Blank Inter-Stimulus Interval (ISI)
+                    const animalTimeout = setTimeout(() => {
+                        clearInterval(barInterval);
+                        timerWrapper.classList.add('hidden');
+                        showStageElement('stage-blank');
+
+                        const isiTimeout = setTimeout(() => {
+                            index++;
+                            presentNextAnimal();
+                        }, 1000);
+                        state.stimulusTimers.push(isiTimeout);
+                    }, duration);
+                    state.stimulusTimers.push(animalTimeout);
+                }
+
+                presentNextAnimal();
+            }, 1000);
+
+            state.stimulusTimers.push(startTimer);
+        }
+
+        /* =====================================================================
+         * 6. RECOGNITION MEMORY SCREEN
+         * ===================================================================== */
+        function openRecognitionScreen() {
+            showScreen('recognition');
+            state.selectedIds.clear();
+            state.trialStartTime = Date.now();
+
+            const targetCount = state.targetAnimals.length;
+            document.getElementById('recog-target-count').textContent = targetCount;
+            updateRecognitionCounter();
+            document.getElementById('recog-mode-tag').textContent =
+                state.mode === 'practice' ? 'Latihan Mengingat' : `Tantangan Memori • Level ${state.memoryLevel}`;
+
+            // Reset feedback & buttons
+            const fbBox = document.getElementById('recog-feedback-box');
+            fbBox.classList.add('hidden');
+            document.getElementById('btn-submit-recognition').classList.remove('hidden');
+            document.getElementById('recog-next-actions').classList.add('hidden');
+
+            // Combine targets + distractors and shuffle
+            state.gridAnimals = shuffleArray([...state.targetAnimals, ...state.distractorAnimals]);
+            renderRecognitionGrid(false);
+
+            playDubbedAudio(
+                `tanya_memori_${targetCount}`,
+                `Mana saja ${targetCount} hewan yang tadi muncul? Pilih gambar hewan yang tadi kamu lihat.`,
+                true
+            );
+        }
+
+        function renderRecognitionGrid(revealResults = false) {
+            const grid = document.getElementById('recognition-grid');
+            grid.innerHTML = '';
+            const targetSet = new Set(state.targetAnimals.map(a => a.id));
+            const maxSelectable = state.targetAnimals.length;
+            const isLimitReached = state.selectedIds.size >= maxSelectable;
+
+            state.gridAnimals.forEach(animal => {
+                const isSelected = state.selectedIds.has(animal.id);
+                const isTarget = targetSet.has(animal.id);
+
+                let cardStyle = 'bg-cream hover:bg-banana/40 border-bellpepper';
+                let statusBadge = '';
+
+                if (!revealResults) {
+                    if (isSelected) {
+                        cardStyle = 'bg-banana border-bellpepper ring-4 ring-ocean/40 scale-[1.02]';
+                        statusBadge = `<span class="absolute top-2 right-2 w-8 h-8 rounded-full bg-ocean text-white border-2 border-bellpepper flex items-center justify-center font-black text-base">✓</span>`;
+                    } else if (isLimitReached) {
+                        cardStyle = 'bg-cream opacity-55 border-bellpepper cursor-not-allowed';
+                    }
+                } else {
+                    if (isTarget && isSelected) {
+                        cardStyle = 'bg-avocado/45 border-bellpepper';
+                        statusBadge = `<span class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-avocado text-bellpepper border-2 border-bellpepper font-extrabold text-xs">Benar ✓</span>`;
+                    } else if (isTarget && !isSelected) {
+                        cardStyle = 'bg-banana/70 border-bellpepper border-dashed';
+                        statusBadge = `<span class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-banana text-bellpepper border-2 border-bellpepper font-extrabold text-xs">Tadi Muncul</span>`;
+                    } else if (!isTarget && isSelected) {
+                        cardStyle = 'bg-bubblegum/35 border-bellpepper';
+                        statusBadge = `<span class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-bubblegum text-bellpepper border-2 border-bellpepper font-extrabold text-xs">Bukan</span>`;
+                    } else {
+                        cardStyle = 'bg-cream opacity-65 border-bellpepper';
+                    }
+                }
+
+                const card = document.createElement('button');
+                card.type = 'button';
+                if (!revealResults) {
+                    card.onclick = () => toggleRecognitionCard(animal.id);
+                } else {
+                    card.disabled = true;
+                }
+                card.className = `relative rounded-3xl border-3 p-3.5 flex flex-col items-center justify-center transition-all shadow-playful-sm focus:outline-none ${cardStyle}`;
+                card.innerHTML = `
+                    ${statusBadge}
+                    <div class="w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center rounded-2xl overflow-hidden bg-white border-2 border-bellpepper">
+                        ${renderAnimalVisual(animal, 'w-full h-full object-cover', 'text-5xl sm:text-6xl')}
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function updateRecognitionCounter() {
+            const counterEl = document.getElementById('recog-selected-counter');
+            if (counterEl) {
+                counterEl.textContent = `${state.selectedIds.size} / ${state.targetAnimals.length}`;
+            }
+        }
+
+        function toggleRecognitionCard(animalId) {
+            const maxAllowed = state.targetAnimals.length;
+            const clickedAnimal = state.gridAnimals.find(a => a.id === animalId);
+            if (state.selectedIds.has(animalId)) {
+                playSFX('click');
+                state.selectedIds.delete(animalId);
+                if (clickedAnimal) speakAnimalDubbed(clickedAnimal.name);
+            } else {
+                if (state.selectedIds.size >= maxAllowed) {
+                    playSFX('gentle-retry');
+                    return;
+                }
+                playSFX('click');
+                state.selectedIds.add(animalId);
+                if (clickedAnimal) speakAnimalDubbed(clickedAnimal.name);
+            }
+            updateRecognitionCounter();
+            renderRecognitionGrid(false);
+        }
+
+        function submitRecognition() {
+            const targetSet = new Set(state.targetAnimals.map(a => a.id));
+            const totalTargets = targetSet.size;
+            if (state.selectedIds.size < totalTargets) {
+                playSFX('gentle-retry');
+                playDubbedAudio('pilihan_kurang', 'Eh, masih ada yang kurang nih.', false);
+                return;
+            }
+
+            const reactionTimeSec = ((Date.now() - state.trialStartTime) / 1000).toFixed(2);
+            let hits = 0;
+            let falseAlarms = 0;
+
+            state.selectedIds.forEach(id => {
+                if (targetSet.has(id)) hits++;
+                else falseAlarms++;
+            });
+
+            const isPerfect = (hits === totalTargets && falseAlarms === 0);
+
+            // Record telemetry & score (mencatat baik benar maupun salah)
+            if (state.mode === 'memory') {
+                state.memoryCorrectTotal += hits;
+                state.memoryTargetTotal += totalTargets;
+                if (isPerfect) {
+                    state.completedMemoryLevels.add(state.memoryLevel);
+                }
+            }
+
+            logActivity({
+                task: state.mode === 'practice' ? 'Latihan Memori' : `Memori Level ${state.memoryLevel}`,
+                detail: `${hits}/${totalTargets} benar${falseAlarms > 0 ? `, ${falseAlarms} salah` : ''}`,
+                correct: isPerfect,
+                rt: parseFloat(reactionTimeSec)
+            });
+
+            // Reveal visual feedback on cards (hijau untuk benar, merah muda untuk salah, kuning untuk yang terlewat)
+            renderRecognitionGrid(true);
+            document.getElementById('btn-submit-recognition').classList.add('hidden');
+            document.getElementById('recog-next-actions').classList.remove('hidden');
+
+            const fbBox = document.getElementById('recog-feedback-box');
+            const fbTitle = document.getElementById('recog-feedback-title');
+            const fbDesc = document.getElementById('recog-feedback-desc');
+            fbBox.classList.remove('hidden');
+
+            const btnRetry = document.getElementById('btn-retry-trial');
+
+            if (isPerfect) {
+                playSFX('success');
+                fbBox.className = 'mb-6 p-4 rounded-2xl border-3 border-bellpepper text-center animate-pop bg-avocado/35';
+                fbTitle.textContent = '🎉 Luar Biasa! Semua Pilihanmu Benar!';
+                fbDesc.textContent = `Kamu berhasil menemukan semua ${totalTargets} hewan yang tadi muncul.`;
+                playDubbedAudio(
+                    'hasil_memori_benar',
+                    `Luar biasa! Kamu berhasil menemukan semua ${totalTargets} hewan yang tadi muncul!`,
+                    true
+                );
+                btnRetry.classList.add('hidden');
+            } else {
+                playSFX('gentle-retry');
+                fbBox.className = 'mb-6 p-4 rounded-2xl border-3 border-bellpepper text-center animate-pop bg-bubblegum/30';
+                fbTitle.textContent = `✨ ${hits} Benar, ${falseAlarms} Salah`;
+                fbDesc.textContent = `Perhatikan tanda pada gambar di atas! Kamu bisa tekan "Coba Lagi" atau lanjut ke langkah berikutnya.`;
+                playDubbedAudio(
+                    'hasil_memori_salah',
+                    'Hmm, masih ada yang salah. Lihat gambar yang bertanda tadi muncul ya.',
+                    true
+                );
+                btnRetry.classList.remove('hidden');
+            }
+
+            // Configure next buttons based on mode
+            const btnNextLvl = document.getElementById('btn-next-memory-level');
+            const btnHabitat = document.getElementById('btn-go-habitat');
+
+            if (state.mode === 'practice') {
+                btnNextLvl.textContent = '🚀 Mulai Tantangan Memori';
+                btnNextLvl.classList.remove('hidden');
+                btnHabitat.classList.add('hidden');
+            } else {
+                if (state.memoryLevel < 4) {
+                    btnNextLvl.textContent = `⭐ Lanjut Level ${state.memoryLevel + 1}`;
+                    btnNextLvl.classList.remove('hidden');
+                } else {
+                    btnNextLvl.classList.add('hidden');
+                }
+                btnHabitat.classList.remove('hidden');
+            }
+        }
+
+        function retryCurrentTrial() {
+            playSFX('click');
+            if (state.mode === 'practice') {
+                startPractice();
+            } else {
+                showScreen('stimulus');
+                document.getElementById('level-selector-panel').classList.add('hidden');
+                beginMemoryTrial();
+            }
+        }
+
+        function prepareNextMemoryStep() {
+            playSFX('click');
+            if (state.mode === 'practice') {
+                enterMemoryChallengeSetup(1);
+            } else {
+                const nextLvl = Math.min(4, state.memoryLevel + 1);
+                enterMemoryChallengeSetup(nextLvl);
+            }
+        }
+
+        /* =====================================================================
+         * 7. HABITAT CHALLENGE (DRAG & DROP + TAP ALTERNATIVE)
+         * ===================================================================== */
+        function startHabitatChallenge() {
+            playSFX('click');
+            // Pick 6 balanced animals (2 Darat, 2 Air, 2 Udara)
+            const darat = shuffleArray(ANIMALS.filter(a => a.habitat === 'Darat')).slice(0, 2);
+            const air = shuffleArray(ANIMALS.filter(a => a.habitat === 'Air')).slice(0, 2);
+            const udara = shuffleArray(ANIMALS.filter(a => a.habitat === 'Udara')).slice(0, 2);
+
+            state.habitatQueue = shuffleArray([...darat, ...air, ...udara]);
+            state.habitatIndex = 0;
+            state.habitatScore = 0;
+            state.habitatCardSelected = false;
+
+            showScreen('habitat');
+            loadCurrentHabitatItem();
+        }
+
+        function loadCurrentHabitatItem() {
+            const animal = state.habitatQueue[state.habitatIndex];
+            state.habitatStartTime = Date.now();
+            state.habitatCardSelected = false;
+
+            // Reset highlight warna jawaban pada kotak habitat
+            ['zone-darat', 'zone-air', 'zone-udara'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('ring-4', 'ring-avocado', 'bg-avocado/50', 'scale-105', 'ring-bubblegum', 'opacity-50');
+            });
+
+            document.getElementById('habitat-progress-text').textContent = `${state.habitatIndex + 1}/${state.habitatQueue.length}`;
+            document.getElementById('habitat-animal-emoji').innerHTML = renderAnimalVisual(animal, 'w-full h-full object-cover', 'text-7xl sm:text-8xl');
+            document.getElementById('habitat-feedback-box').classList.add('hidden');
+            updateCardSelectionVisual('habitat');
+
+            playDubbedAudio(
+                'tanya_rumah_hewan',
+                'Di mana rumah hewan ini? Pilih Darat, Air, atau Udara.',
+                true
+            );
+        }
+
+        function classifyHabitat(chosenHabitat) {
+            if (state.isHabitatLocked) return;
+            const animal = state.habitatQueue[state.habitatIndex];
+            if (!animal) return;
+
+            state.isHabitatLocked = true;
+            const isCorrect = animal.habitat === chosenHabitat;
+            const rt = ((Date.now() - state.habitatStartTime) / 1000).toFixed(2);
+
+            logActivity({
+                task: 'Klasifikasi Habitat',
+                detail: `${animal.name} → ${chosenHabitat} (${isCorrect ? 'Benar' : 'Salah, seharusnya ' + animal.habitat})`,
+                correct: isCorrect,
+                rt: parseFloat(rt)
+            });
+
+            const fbBox = document.getElementById('habitat-feedback-box');
+            const fbText = document.getElementById('habitat-feedback-text');
+            fbBox.classList.remove('hidden');
+
+            if (isCorrect) {
+                playSFX('success');
+                state.habitatScore++;
+                fbBox.className = 'mb-5 p-3.5 rounded-2xl border-3 border-bellpepper text-center animate-pop bg-avocado/40';
+                fbText.textContent = 'Tepat sekali.';
+                playDubbedAudio('tepat_sekali', 'Tepat sekali.', false);
+            } else {
+                playSFX('gentle-retry');
+                fbBox.className = 'mb-5 p-3.5 rounded-2xl border-3 border-bellpepper text-center animate-pop bg-bubblegum/35';
+                fbText.textContent = 'Kurang tepat.';
+                playDubbedAudio('kurang_tepat', 'Kurang tepat.', false);
+
+                // Beri highlight warna hijau pada kotak jawaban yang benar
+                const habitatZoneMap = { 'Darat': 'zone-darat', 'Air': 'zone-air', 'Udara': 'zone-udara' };
+                const correctZoneId = habitatZoneMap[animal.habitat];
+                const chosenZoneId = habitatZoneMap[chosenHabitat];
+                Object.values(habitatZoneMap).forEach(zId => {
+                    const zEl = document.getElementById(zId);
+                    if (!zEl) return;
+                    if (zId === correctZoneId) {
+                        zEl.classList.add('ring-4', 'ring-avocado', 'bg-avocado/50', 'scale-105');
+                    } else if (zId === chosenZoneId) {
+                        zEl.classList.add('ring-4', 'ring-bubblegum', 'opacity-50');
+                    } else {
+                        zEl.classList.add('opacity-50');
+                    }
+                });
+            }
+
+            // Advance to next animal or Diet Challenge after short pause
+            setTimeout(() => {
+                state.isHabitatLocked = false;
+                state.habitatIndex++;
+                if (state.habitatIndex < state.habitatQueue.length) {
+                    loadCurrentHabitatItem();
+                } else {
+                    startDietChallenge();
+                }
+            }, 2200);
+        }
+
+        /* =====================================================================
+         * 8. DIET CHALLENGE (HERBIVORA / KARNIVORA / OMNIVORA)
+         * ===================================================================== */
+        function startDietChallenge() {
+            // Pick 6 balanced animals (2 Herbivora, 2 Karnivora, 2 Omnivora)
+            const herb = shuffleArray(ANIMALS.filter(a => a.diet === 'Herbivora')).slice(0, 2);
+            const karn = shuffleArray(ANIMALS.filter(a => a.diet === 'Karnivora')).slice(0, 2);
+            const omni = shuffleArray(ANIMALS.filter(a => a.diet === 'Omnivora')).slice(0, 2);
+
+            state.dietQueue = shuffleArray([...herb, ...karn, ...omni]);
+            state.dietIndex = 0;
+            state.dietScore = 0;
+            state.dietCardSelected = false;
+
+            showScreen('diet');
+            loadCurrentDietItem();
+        }
+
+        function loadCurrentDietItem() {
+            const animal = state.dietQueue[state.dietIndex];
+            state.dietStartTime = Date.now();
+            state.dietCardSelected = false;
+
+            // Reset highlight warna jawaban pada kotak makanan
+            ['zone-herbivora', 'zone-karnivora', 'zone-omnivora'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('ring-4', 'ring-avocado', 'bg-avocado/50', 'scale-105', 'ring-bubblegum', 'opacity-50');
+            });
+
+            document.getElementById('diet-progress-text').textContent = `${state.dietIndex + 1}/${state.dietQueue.length}`;
+            document.getElementById('diet-animal-emoji').innerHTML = renderAnimalVisual(animal, 'w-full h-full object-cover', 'text-7xl sm:text-8xl');
+            document.getElementById('diet-feedback-box').classList.add('hidden');
+            updateCardSelectionVisual('diet');
+
+            playDubbedAudio(
+                'tanya_makanan_hewan',
+                'Apa makanan kesukaan hewan ini? Pilih Herbivora, Karnivora, atau Omnivora.',
+                true
+            );
+        }
+
+        function classifyDiet(chosenDiet) {
+            if (state.isDietLocked) return;
+            const animal = state.dietQueue[state.dietIndex];
+            if (!animal) return;
+
+            state.isDietLocked = true;
+            const isCorrect = animal.diet === chosenDiet;
+            const rt = ((Date.now() - state.dietStartTime) / 1000).toFixed(2);
+
+            logActivity({
+                task: 'Klasifikasi Makanan',
+                detail: `${animal.name} → ${chosenDiet} (${isCorrect ? 'Benar' : 'Salah, seharusnya ' + animal.diet})`,
+                correct: isCorrect,
+                rt: parseFloat(rt)
+            });
+
+            const fbBox = document.getElementById('diet-feedback-box');
+            const fbText = document.getElementById('diet-feedback-text');
+            fbBox.classList.remove('hidden');
+
+            if (isCorrect) {
+                playSFX('success');
+                state.dietScore++;
+                fbBox.className = 'mb-5 p-3.5 rounded-2xl border-3 border-bellpepper text-center animate-pop bg-avocado/40';
+                fbText.textContent = 'Tepat sekali.';
+                playDubbedAudio('tepat_sekali', 'Tepat sekali.', false);
+            } else {
+                playSFX('gentle-retry');
+                fbBox.className = 'mb-5 p-3.5 rounded-2xl border-3 border-bellpepper text-center animate-pop bg-bubblegum/35';
+                fbText.textContent = 'Kurang tepat.';
+                playDubbedAudio('kurang_tepat', 'Kurang tepat.', false);
+
+                // Beri highlight warna hijau pada kotak jawaban yang benar
+                const dietZoneMap = { 'Herbivora': 'zone-herbivora', 'Karnivora': 'zone-karnivora', 'Omnivora': 'zone-omnivora' };
+                const correctZoneId = dietZoneMap[animal.diet];
+                const chosenZoneId = dietZoneMap[chosenDiet];
+                Object.values(dietZoneMap).forEach(zId => {
+                    const zEl = document.getElementById(zId);
+                    if (!zEl) return;
+                    if (zId === correctZoneId) {
+                        zEl.classList.add('ring-4', 'ring-avocado', 'bg-avocado/50', 'scale-105');
+                    } else if (zId === chosenZoneId) {
+                        zEl.classList.add('ring-4', 'ring-bubblegum', 'opacity-50');
+                    } else {
+                        zEl.classList.add('opacity-50');
+                    }
+                });
+            }
+
+            setTimeout(() => {
+                state.isDietLocked = false;
+                state.dietIndex++;
+                if (state.dietIndex < state.dietQueue.length) {
+                    loadCurrentDietItem();
+                } else {
+                    showSummaryScreen();
+                }
+            }, 2200);
+        }
+
+        /* =====================================================================
+         * 9. DRAG & DROP + TAP INTERACTION HELPERS
+         * ===================================================================== */
+        function toggleAnimalSelect(context) {
+            playSFX('click');
+            if (context === 'habitat') {
+                state.habitatCardSelected = !state.habitatCardSelected;
+                updateCardSelectionVisual('habitat');
+                const currentAnimal = state.habitatQueue[state.habitatIndex];
+                if (currentAnimal) speakAnimalDubbed(currentAnimal.name);
+            } else {
+                state.dietCardSelected = !state.dietCardSelected;
+                updateCardSelectionVisual('diet');
+                const currentAnimal = state.dietQueue[state.dietIndex];
+                if (currentAnimal) speakAnimalDubbed(currentAnimal.name);
+            }
+        }
+
+        function updateCardSelectionVisual(context) {
+            const isSelected = context === 'habitat' ? state.habitatCardSelected : state.dietCardSelected;
+            const card = document.getElementById(`${context}-animal-card`);
+            const hint = document.getElementById(`${context}-selected-hint`);
+            if (!card || !hint) return;
+
+            if (isSelected) {
+                card.classList.add('ring-4', 'ring-ocean', 'scale-105');
+                hint.textContent = 'Terpilih! Klik Kotak Tujuan 👇';
+                hint.className = 'inline-block mt-1 text-xs font-extrabold bg-ocean text-white px-2.5 py-0.5 rounded-full border-2 border-bellpepper';
+            } else {
+                card.classList.remove('ring-4', 'ring-ocean', 'scale-105');
+                hint.textContent = 'Tarik atau Klik Rumahnya';
+                hint.className = 'inline-block mt-1 text-xs font-extrabold bg-white text-bellpepper px-2.5 py-0.5 rounded-full border-2 border-bellpepper';
+            }
+        }
+
+        function handleDragStart(event) {
+            event.dataTransfer.setData('text/plain', 'active-animal');
+        }
+
+        function handleDragOver(event, zoneId) {
+            event.preventDefault();
+            document.getElementById(zoneId)?.classList.add('dropzone-active');
+        }
+
+        function handleDragLeave(zoneId) {
+            document.getElementById(zoneId)?.classList.remove('dropzone-active');
+        }
+
+        function handleDrop(event, category, context) {
+            event.preventDefault();
+            document.querySelectorAll('.dropzone-active').forEach(el => el.classList.remove('dropzone-active'));
+            if (context === 'habitat') {
+                classifyHabitat(category);
+            } else {
+                classifyDiet(category);
+            }
+        }
+
+        /* =====================================================================
+         * 10. SUMMARY & COMPANION TELEMETRY DASHBOARD
+         * ===================================================================== */
+        function showSummaryScreen() {
+            playSFX('fanfare');
+            showScreen('summary');
+
+            document.getElementById('summary-greeting').textContent =
+                `Selamat ${state.participantName} (${state.grade}), kamu telah menyelesaikan seluruh petualangan!`;
+            document.getElementById('summary-memory-score').textContent =
+                `${state.memoryCorrectTotal} / ${state.memoryTargetTotal || 2}`;
+            document.getElementById('summary-habitat-score').textContent =
+                `${state.habitatScore} / ${state.habitatQueue.length}`;
+            document.getElementById('summary-diet-score').textContent =
+                `${state.dietScore} / ${state.dietQueue.length}`;
+
+            playDubbedAudio(
+                'halaman_akhir',
+                'Hebat sekali! Kamu telah menyelesaikan seluruh petualangan satwa hari ini dan meraih lencana Sahabat Satwa Cerdas!',
+                true
+            );
+        }
+
+        function resetAndPlayAgain() {
+            playSFX('click');
+            state.memoryCorrectTotal = 0;
+            state.memoryTargetTotal = 0;
+            state.completedMemoryLevels.clear();
+            enterMemoryChallengeSetup(1);
+        }
+
+        function logActivity(entry) {
+            state.logs.push({
+                timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                ...entry
+            });
+        }
+
+        function openDashboardModal() {
+            playSFX('click');
+            captureExplorerProfile();
+            document.getElementById('dash-name').textContent = state.participantName;
+            document.getElementById('dash-grade').textContent = state.grade;
+
+            const acc = state.memoryTargetTotal > 0
+                ? Math.round((state.memoryCorrectTotal / state.memoryTargetTotal) * 100)
+                : 0;
+            document.getElementById('dash-mem-acc').textContent = `${acc}% (${state.memoryCorrectTotal}/${state.memoryTargetTotal})`;
+
+            const avgRt = state.logs.length > 0
+                ? (state.logs.reduce((sum, item) => sum + item.rt, 0) / state.logs.length).toFixed(2)
+                : '0.00';
+            document.getElementById('dash-avg-rt').textContent = `${avgRt} dtk`;
+            document.getElementById('dash-total-events').textContent = `${state.logs.length} Aktivitas`;
+
+            const listEl = document.getElementById('dash-log-list');
+            if (state.logs.length === 0) {
+                listEl.innerHTML = `<p class="p-4 text-center text-bellpepper/60">Belum ada aktivitas tercatat pada sesi ini.</p>`;
+            } else {
+                listEl.innerHTML = state.logs.slice().reverse().map(log => `
+                    <div class="p-2.5 flex items-center justify-between gap-2">
+                        <div>
+                            <span class="inline-block px-2 py-0.5 rounded-md text-xs ${log.correct ? 'bg-avocado/40 text-bellpepper' : 'bg-bubblegum/40 text-bellpepper'} mr-1.5">
+                                ${log.correct ? '✓ Benar' : '✕ Salah'}
+                            </span>
+                            <span class="text-bellpepper">${log.task}:</span>
+                            <span class="text-bellpepper/80 font-semibold">${log.detail}</span>
+                        </div>
+                        <span class="text-xs text-ocean shrink-0">${log.rt}s</span>
+                    </div>
+                `).join('');
+            }
+
+            openModal('modal-dashboard');
+        }
+
+        function copyTelemetryReport() {
+            const reportLines = [
+                `Laporan Petualangan Memori Satwa`,
+                `Penjelajah: ${state.participantName} | Kelas: ${state.grade}`,
+                `Memori: ${state.memoryCorrectTotal}/${state.memoryTargetTotal} | Habitat: ${state.habitatScore}/6 | Makanan: ${state.dietScore}/6`,
+                `--- Detail Percobaan ---`,
+                ...state.logs.map(l => `[${l.timestamp}] ${l.task} - ${l.detail} (${l.rt}s)`)
+            ].join('\n');
+
+            const tempArea = document.createElement('textarea');
+            tempArea.value = reportLines;
+            document.body.appendChild(tempArea);
+            tempArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempArea);
+
+            const label = document.getElementById('btn-copy-label');
+            label.textContent = 'Tersalin!';
+            setTimeout(() => { label.textContent = 'Salin Ringkasan Data'; }, 2000);
+        }
+
+        /* =====================================================================
+         * 11. MODAL HELPERS
+         * ===================================================================== */
+        function openAudioSettingsModal() {
+            playSFX('click');
+            updateAudioUI();
+            openModal('modal-audio');
+        }
+
+        function openModal(id) {
+            document.getElementById(id)?.classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            playSFX('click');
+            document.getElementById(id)?.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
